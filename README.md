@@ -64,15 +64,16 @@ packages/
 3. Add env var `OCR_WARMUP=true` (optional, preloads models on cold start).
 4. Deploy.
 
-Vercel auto-detects Next.js. OCR routes use the Node.js runtime with `serverExternalPackages` for `onnxruntime-node`.
+Vercel auto-detects Next.js. OCR routes use the Node.js runtime. `next.config.ts` excludes unused `onnxruntime-node` platform binaries (macOS/Windows) so the bundle stays under Vercel’s 250MB limit—only Linux x64 is deployed.
 
-**Note:** The OCR stack is large (~250MB+ with native deps). You may need a Vercel Pro plan for bundle limits and longer function timeouts (routes are configured for up to 300s).
+Set `HOME=/tmp` in Vercel (included in `apps/web/vercel.json`) so model cache writes work on serverless. Routes allow up to 300s execution time.
 
 ## Troubleshooting
 
 - **`onnxruntime-node` install fails:** Ensure you are on a supported platform (macOS arm64/x64, Linux x64). Try `pnpm install` again after updating Node.
 - **OCR hangs on first request:** Models may still be downloading; check disk space and network. Set `OCR_WARMUP=true` and restart the dev server.
 - **Build fails on Vercel:** Confirm Root Directory is `apps/web` and Node.js 20+ is selected.
+- **“exceeded the unzipped maximum size of 250 MB”:** Ensure `outputFileTracingExcludes` in `next.config.ts` is present (strips non-Linux ONNX binaries). Redeploy after pulling latest.
 
 ## Learn more
 
