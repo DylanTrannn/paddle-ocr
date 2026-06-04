@@ -2,7 +2,7 @@
 
 A small learning project for [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) using **local inference** with [ppu-paddle-ocr](https://jsr.io/@snowfluke/ppu-paddle-ocr) (PP-OCRv5 on ONNX Runtime). No cloud API key required.
 
-**Stack:** pnpm workspaces, TypeScript, React + Vite, Hono, Zod.
+**Stack:** pnpm workspaces, TypeScript, **Next.js** (App Router), Zod.
 
 ## Prerequisites
 
@@ -13,34 +13,29 @@ A small learning project for [PaddleOCR](https://github.com/PaddlePaddle/PaddleO
 
 ```bash
 pnpm install
-cp .env.example apps/api/.env   # optional: PORT and OCR_WARMUP
+cp .env.example .env   # optional: OCR_WARMUP
 pnpm dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173), upload an image, and run OCR.
-
-- **Web:** `apps/web` (Vite, port 5173)
-- **API:** `apps/api` (Hono, port 3001)
-
-The Vite dev server proxies `/api` and `/health` to the API.
+Open [http://localhost:3000](http://localhost:3000), upload images, and run OCR.
 
 ## First run
 
-On the first OCR request (or on API startup if `OCR_WARMUP=true`), PP-OCRv5 mobile models download to `~/.cache/ppu-paddle-ocr`. This can take **1–3+ minutes** depending on your connection. Later runs are much faster.
+On the first OCR request (or on server start if `OCR_WARMUP=true`), PP-OCRv5 mobile models download to `~/.cache/ppu-paddle-ocr`. This can take **1–3+ minutes** depending on your connection. Later runs are much faster.
 
 ## API endpoints
 
-| Method | Path              | Description                                             |
-| ------ | ----------------- | ------------------------------------------------------- |
-| GET    | `/health`         | Health check                                            |
-| GET    | `/api/ocr/status` | Whether OCR models are initialized                      |
-| POST   | `/api/ocr`        | Single image: multipart field `image` (max 10MB)        |
-| POST   | `/api/ocr/batch`  | Multiple images: repeated field `images` (max 20 files) |
+| Method | Path                 | Description                                      |
+| ------ | -------------------- | ------------------------------------------------ |
+| GET    | `/api/health`        | Health check                                     |
+| GET    | `/api/ocr/status`    | Whether OCR models are initialized               |
+| POST   | `/api/ocr`           | Single image: multipart field `image` (max 10MB) |
+| POST   | `/api/ocr/batch`     | Multiple images: field `images[]` (max 20 files) |
 
 ### Example (curl)
 
 ```bash
-curl -X POST http://localhost:3001/api/ocr \
+curl -X POST http://localhost:3000/api/ocr \
   -F "image=@./your-image.png"
 ```
 
@@ -48,41 +43,36 @@ curl -X POST http://localhost:3001/api/ocr \
 
 ```
 apps/
-  api/     # Hono + ppu-paddle-ocr
-  web/     # React upload UI
+  web/     # Next.js UI + API route handlers (OCR)
 packages/
   shared/  # Zod schemas (OcrResponse, ApiError)
 ```
 
 ## Scripts
 
-| Command          | Description                 |
-| ---------------- | --------------------------- |
-| `pnpm dev`       | Run API and web in parallel |
-| `pnpm build`     | Build all packages          |
-| `pnpm typecheck` | Typecheck all packages      |
+| Command          | Description        |
+| ---------------- | ------------------ |
+| `pnpm dev`       | Next.js dev server |
+| `pnpm build`     | Production build   |
+| `pnpm start`     | Production server  |
+| `pnpm typecheck` | Typecheck all      |
+
+## Deploy to Vercel
+
+1. Push the repo to GitHub and import it in Vercel.
+2. Set **Root Directory** to `apps/web`.
+3. Add env var `OCR_WARMUP=true` (optional, preloads models on cold start).
+4. Deploy.
+
+Vercel auto-detects Next.js. OCR routes use the Node.js runtime with `serverExternalPackages` for `onnxruntime-node`.
+
+**Note:** The OCR stack is large (~250MB+ with native deps). You may need a Vercel Pro plan for bundle limits and longer function timeouts (routes are configured for up to 300s).
 
 ## Troubleshooting
 
 - **`onnxruntime-node` install fails:** Ensure you are on a supported platform (macOS arm64/x64, Linux x64). Try `pnpm install` again after updating Node.
-- **OCR hangs on first request:** Models may still be downloading; check disk space and network. Restart the API with `OCR_WARMUP=true` and watch the console.
-- **Network error in the UI:** Start both services with `pnpm dev` (not only the web app).
-
-## Deploy to Vercel
-
-The repo includes a root `vercel.json` that builds the Vite frontend and routes `/api/*` and `/health` to a Hono serverless function.
-
-**Important:** The OCR API depends on `onnxruntime-node` (~250MB+ with models). Vercel serverless functions have a **250MB uncompressed bundle limit**, so the API may fail to deploy or cold-start on Vercel. For production OCR, consider hosting `apps/api` on [Railway](https://railway.app), [Fly.io](https://fly.io), or [Render](https://render.com) and pointing the web app at that URL.
-
-### Steps
-
-1. Log in: `vercel login`
-2. From the repo root: `vercel` (preview) or `vercel --prod`
-3. Optional env vars in the Vercel project dashboard:
-   - `OCR_WARMUP=true` — preload models on cold start (slower deploy, faster first request)
-   - `WEB_ORIGIN` — extra allowed CORS origin if the UI is hosted elsewhere
-
-The UI calls `/api/...` on the same origin in production (no proxy needed).
+- **OCR hangs on first request:** Models may still be downloading; check disk space and network. Set `OCR_WARMUP=true` and restart the dev server.
+- **Build fails on Vercel:** Confirm Root Directory is `apps/web` and Node.js 20+ is selected.
 
 ## Learn more
 

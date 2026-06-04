@@ -1,24 +1,25 @@
+'use client'
+
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ApiErrorSchema,
   OcrBatchResponseSchema,
   type OcrBatchItem,
 } from '@paddle-ocr/shared'
-import { FileDropzone } from './components/FileDropzone'
-import { OcrResultCard } from './components/OcrResultCard'
+import { FileDropzone } from './FileDropzone'
+import { OcrResultCard } from './OcrResultCard'
 import {
   createQueuedFile,
   formatFileSize,
   revokeQueuedFiles,
   type QueuedFile,
-} from './lib/queuedFile'
-import './App.css'
+} from '@/lib/queuedFile'
 
 const MAX_FILES = 20
 
 type ProcessState = 'idle' | 'processing' | 'done'
 
-export default function App() {
+export function OcrPage() {
   const [queue, setQueue] = useState<QueuedFile[]>([])
   const [processState, setProcessState] = useState<ProcessState>('idle')
   const [progress, setProgress] = useState<{
@@ -114,7 +115,7 @@ export default function App() {
       setProgress({ current: queue.length, total: queue.length })
       setProcessState('done')
     } catch {
-      setGlobalError('Network error — is the API running?')
+      setGlobalError('Network error — is the server running?')
       setProcessState('idle')
       setProgress(null)
     }
@@ -237,8 +238,8 @@ export default function App() {
       )}
 
       <footer className='footer'>
-        Models cache at ~/.cache/ppu-paddle-ocr. Set{' '}
-        <code>OCR_WARMUP=true</code> on the API to preload.
+        Models cache at ~/.cache/ppu-paddle-ocr. Set <code>OCR_WARMUP=true</code>{' '}
+        to preload on server start.
       </footer>
     </div>
   )

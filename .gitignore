@@ -3,6 +3,8 @@ dist
 packages/shared/dist
 apps/api/dist
 apps/web/dist
+apps/web/.next
+apps/web/out
 .env
 .DS_Store
 *.log
