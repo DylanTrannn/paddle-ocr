@@ -1,0 +1,22 @@
+{
+  "name": "paddle-ocr",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "pnpm run --parallel dev",
+    "build": "pnpm --filter @paddle-ocr/shared build && pnpm --filter @paddle-ocr/api build && pnpm --filter @paddle-ocr/web build",
+    "predev": "pnpm --filter @paddle-ocr/shared build",
+    "typecheck": "pnpm run -r typecheck"
+  },
+  "dependencies": {
+    "@paddle-ocr/shared": "workspace:*",
+    "hono": "^4.6.14",
+    "onnxruntime-node": "^1.20.1",
+    "ppu-paddle-ocr": "^1.3.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}

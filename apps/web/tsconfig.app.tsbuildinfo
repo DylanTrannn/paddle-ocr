@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/filedropzone.tsx","./src/components/ocrresultcard.tsx","./src/lib/queuedfile.ts"],"version":"5.9.3"}
