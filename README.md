@@ -60,19 +60,22 @@ packages/
 ## Deploy to Vercel
 
 1. Push the repo to GitHub and import it in Vercel.
-2. Set **Root Directory** to `apps/web`.
+2. In **Project Settings → Build & Development Settings**:
+   - **Root Directory:** `apps/web` (recommended), **or** leave blank to use the repo-root `vercel.json`.
+   - **Framework Preset:** Next.js
+   - **Output Directory:** leave **empty** (do not use `dist` — that is for static sites, not Next.js)
+   - If you see a yellow **Production Override** banner, open it and reset Output Directory / Framework to project defaults.
 3. Add env var `OCR_WARMUP=true` (optional, preloads models on cold start).
 4. Deploy.
 
-Vercel auto-detects Next.js. OCR routes use the Node.js runtime. `next.config.ts` excludes unused `onnxruntime-node` platform binaries (macOS/Windows) so the bundle stays under Vercel’s 250MB limit—only Linux x64 is deployed.
-
-Set `HOME=/tmp` in Vercel (included in `apps/web/vercel.json`) so model cache writes work on serverless. Routes allow up to 300s execution time.
+`vercel.json` sets `framework: nextjs`, `outputDirectory: ".next"`, and `HOME=/tmp` for model cache on serverless. OCR routes use the Node.js runtime. `next.config.ts` excludes unused `onnxruntime-node` platform binaries (macOS/Windows) so the bundle stays under Vercel’s 250MB limit—only Linux x64 is deployed.
 
 ## Troubleshooting
 
 - **`onnxruntime-node` install fails:** Ensure you are on a supported platform (macOS arm64/x64, Linux x64). Try `pnpm install` again after updating Node.
 - **OCR hangs on first request:** Models may still be downloading; check disk space and network. Set `OCR_WARMUP=true` and restart the dev server.
-- **Build fails on Vercel:** Confirm Root Directory is `apps/web` and Node.js 20+ is selected.
+- **“No Output Directory named dist found”:** Dashboard **Output Directory** is still `dist` (often from an old static-site preset). Clear it or set Framework to **Next.js**. Redeploy after pulling `vercel.json` with `outputDirectory: ".next"`.
+- **Build fails on Vercel:** Confirm Root Directory is `apps/web` (or repo root with root `vercel.json`) and Node.js 20+ is selected.
 - **“exceeded the unzipped maximum size of 250 MB”:** Ensure `outputFileTracingExcludes` in `next.config.ts` is present (strips non-Linux ONNX binaries). Redeploy after pulling latest.
 
 ## Learn more
